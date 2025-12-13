@@ -1,0 +1,36 @@
+[
+  {
+    "id": "acme-backend-001",
+    "url": "https://acme.com/careers/backend-engineer",
+    "title": "Backend Engineer",
+    "company": "Acme Corp",
+    "location": "Remote (EU)",
+    "description": "We are looking for a backend engineer with Node.js experience.",
+    "remote": true,
+    "employmentType": "full_time",
+    "seniority": "mid",
+    "postedAt": "2024-11-28"
+  },
+  {
+    "id": "acme-senior-frontend-002",
+    "url": "https://acme.com/careers/senior-frontend",
+    "title": "Senior Frontend Engineer",
+    "company": "Acme Corp",
+    "location": "Berlin, Germany",
+    "description": "React, TypeScript, and modern frontend tooling.",
+    "remote": "hybrid",
+    "employmentType": "full_time",
+    "seniority": "senior"
+  },
+  {
+    "id": "globex-contract-003",
+    "url": "https://globex.com/jobs/contract-node",
+    "title": "Node.js Contractor",
+    "company": "Globex",
+    "location": "Onsite - London",
+    "description": "6-month contract. Onsite presence required.",
+    "remote": false,
+    "employmentType": "contract",
+    "seniority": "lead"
+  }
+]
