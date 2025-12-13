@@ -13,3 +13,54 @@ datasource db {
   provider = "sqlite"
 }
 
+enum JobSourceType {
+  LINKEDIN
+  INDEED
+  COMPANY_SITE
+  OTHER
+}
+
+enum RemoteType {
+  ONSITE
+  HYBRID
+  REMOTE
+}
+
+enum EmploymentType {
+  FULL_TIME
+  CONTRACT
+  PART_TIME
+}
+
+enum Seniority {
+  JUNIOR
+  MID
+  SENIOR
+  LEAD
+}
+
+model JobPosting {
+  id String @id @default(cuid())
+
+  source     JobSourceType
+  sourceId   String
+  sourceUrl  String
+
+  title     String
+  company   String
+  location  String
+
+  remoteType      RemoteType
+  employmentType EmploymentType
+  seniority       Seniority
+
+  descriptionRaw String
+
+  postedAt  DateTime?
+  scrapedAt DateTime @default(now())
+
+  @@unique([source, sourceId])
+  @@index([company])
+  @@index([remoteType])
+  @@index([seniority])
+}
