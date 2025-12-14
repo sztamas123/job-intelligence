@@ -34,6 +34,7 @@ async function main() {
   console.log("Ingestion finished");
   console.log(`Ingested: ${result.ingested}`);
   console.log(`Skipped:  ${result.skipped}`);
+  console.log(`Updated:  ${result.updated}`);
 }
 
 main().catch((err) => {

@@ -13,6 +13,7 @@ export class JobIngestionService {
   async run(): Promise<{
     ingested: number;
     skipped: number;
+    updated: number; 
   }> {
     const result = await this.ingestor.ingest();
 
@@ -28,6 +29,7 @@ export class JobIngestionService {
 
     let ingested = 0;
     let skipped = 0;
+    let updated = 0; 
 
     for (const rawJob of result.jobs) {
       const normalized = normalizer.normalize(rawJob);
@@ -37,25 +39,47 @@ export class JobIngestionService {
         continue;
       }
 
-      const exists = await this.jobRepository.existsBySource(
+      const existingJob = await this.jobRepository.findBySource(
         normalized.source,
         normalized.sourceId
       );
 
-      if (exists) {
-        skipped++;
-        continue;
+      if (existingJob) {
+        // Compare fields and decide whether to update or skip
+        if (
+          existingJob.title !== normalized.title ||
+          existingJob.company !== normalized.company ||
+          existingJob.location !== normalized.location ||
+          existingJob.remoteType !== normalized.remoteType ||
+          existingJob.employmentType !== normalized.employmentType ||
+          existingJob.seniority !== normalized.seniority ||
+          existingJob.descriptionRaw !== normalized.descriptionRaw ||
+          existingJob.postedAt?.toISOString() !== normalized.postedAt?.toISOString()
+        ) {
+          await this.jobRepository.update(existingJob.id, {
+            title: normalized.title,
+            company: normalized.company,
+            location: normalized.location,
+            remoteType: normalized.remoteType,
+            employmentType: normalized.employmentType,
+            seniority: normalized.seniority,
+            descriptionRaw: normalized.descriptionRaw,
+            postedAt: normalized.postedAt,
+          });
+          updated++; 
+        } else {
+          skipped++; 
+        }
+      } else {
+        const jobToCreate: Omit<JobPosting, "id"> = {
+          ...normalized,
+          scrapedAt: new Date(),
+        };
+        await this.jobRepository.create(jobToCreate);
+        ingested++; 
       }
-
-      const jobToCreate: Omit<JobPosting, "id"> = {
-        ...normalized,
-        scrapedAt: new Date(),
-      };
-
-      await this.jobRepository.create(jobToCreate);
-      ingested++;
     }
 
-    return { ingested, skipped };
+    return { ingested, skipped, updated }; 
   }
 }
