@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "cli:seed": "ts-node -r dotenv/config src/cli/seed-job.ts",
     "cli:list": "ts-node -r dotenv/config src/cli/list-jobs.ts",
-    "cli:ingest:json": "ts-node src/cli/ingest-json.ts"
+    "cli:ingest:json": "ts-node src/cli/ingest-json.ts",
+    "cli:dedup": "ts-node -r dotenv/config src/cli/resolve-deduplication.ts"
   },
   "keywords": [],
   "author": "",

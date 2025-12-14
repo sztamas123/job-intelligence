@@ -58,7 +58,33 @@ model JobPosting {
   postedAt  DateTime?
   scrapedAt DateTime @default(now())
 
+  canonicalJobId String?
+  canonicalJob   CanonicalJob? @relation(fields: [canonicalJobId], references: [id])
+
   @@unique([source, sourceId])
+  @@index([company])
+  @@index([remoteType])
+  @@index([seniority])
+  @@index([canonicalJobId])
+}
+
+model CanonicalJob {
+  id String @id @default(cuid())
+
+  // “identity-ish” fields (v1 keeps it simple)
+  title    String
+  company  String
+  location String
+
+  remoteType      RemoteType
+  employmentType  EmploymentType
+  seniority       Seniority
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  postings JobPosting[]
+
   @@index([company])
   @@index([remoteType])
   @@index([seniority])
