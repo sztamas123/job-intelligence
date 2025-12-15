@@ -4,6 +4,7 @@ import { JobPosting } from "../domain/job/job.types";
 import { JobRepository } from "../repositories/job.repository";
 import { CanonicalJobResolverService } from "./deduplication/canonical-job-resolver.service";
 import { CanonicalJobScoringService } from "./scoring/canonical-job-scoring.service";
+import { CanonicalJobReconciliationService } from "../application/canonical-job-reconciliation.service";
 
 export class JobIngestionService {
   constructor(
@@ -11,6 +12,7 @@ export class JobIngestionService {
     private readonly normalizers: JobNormalizer[],
     private readonly jobRepository: JobRepository,
     private readonly canonicalJobResolver: CanonicalJobResolverService,
+    private readonly canonicalJobReconciliationService: CanonicalJobReconciliationService,
     private readonly canonicalJobScoringService: CanonicalJobScoringService
   ) {}
 
@@ -73,6 +75,7 @@ export class JobIngestionService {
           });
 
           await this.canonicalJobResolver.resolveForPosting(existingJob.id);
+          await this.canonicalJobReconciliationService.reconcileForPosting(existingJob.id);
           await this.canonicalJobScoringService.scoreForPosting(existingJob.id);
 
           updated++;
@@ -85,10 +88,10 @@ export class JobIngestionService {
           scrapedAt: new Date(),
         };
 
-        const created =
-          await this.jobRepository.create(jobToCreate);
+        const created = await this.jobRepository.create(jobToCreate);
 
         await this.canonicalJobResolver.resolveForPosting(created.id);
+        await this.canonicalJobReconciliationService.reconcileForPosting(created.id);
         await this.canonicalJobScoringService.scoreForPosting(created.id);
 
         ingested++;
