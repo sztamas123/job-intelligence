@@ -3,6 +3,8 @@ import { JsonJobNormalizer } from "../ingestion/normalizers/json-job.normalizer"
 import { JobIngestionService } from "../ingestion/job-ingestion.service";
 import { JobSourceType } from "../domain/job/job.types";
 import { JobRepository } from "../repositories/job.repository";
+import { CanonicalJobResolverService } from "../ingestion/deduplication/canonical-job-resolver.service";
+import { prisma } from "../lib/prisma";
 
 function getArg(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -11,8 +13,7 @@ function getArg(name: string): string | undefined {
 
 async function main() {
   const filePath = getArg("--file");
-  const source =
-    (getArg("--source") as JobSourceType) || "OTHER";
+  const source = (getArg("--source") as JobSourceType) || "OTHER";
 
   if (!filePath) {
     console.error("Usage: ingest-json --file <path> [--source SOURCE]");
@@ -22,11 +23,13 @@ async function main() {
   const ingestor = new JsonFileIngestor(filePath, source);
   const normalizers = [new JsonJobNormalizer()];
   const repository = new JobRepository();
+  const canonicalJobResolver = new CanonicalJobResolverService(prisma);
 
   const service = new JobIngestionService(
     ingestor,
     normalizers,
-    repository
+    repository,
+    canonicalJobResolver
   );
 
   const result = await service.run();
