@@ -71,7 +71,6 @@ model JobPosting {
 model CanonicalJob {
   id String @id @default(cuid())
 
-  // “identity-ish” fields (v1 keeps it simple)
   title    String
   company  String
   location String
@@ -79,6 +78,8 @@ model CanonicalJob {
   remoteType      RemoteType
   employmentType  EmploymentType
   seniority       Seniority
+
+  score Int @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -88,4 +89,5 @@ model CanonicalJob {
   @@index([company])
   @@index([remoteType])
   @@index([seniority])
+  @@index([score])
 }

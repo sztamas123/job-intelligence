@@ -4,6 +4,7 @@ import { JobIngestionService } from "../ingestion/job-ingestion.service";
 import { JobSourceType } from "../domain/job/job.types";
 import { JobRepository } from "../repositories/job.repository";
 import { CanonicalJobResolverService } from "../ingestion/deduplication/canonical-job-resolver.service";
+import { CanonicalJobScoringService } from "../ingestion/scoring/canonical-job-scoring.service";
 import { prisma } from "../lib/prisma";
 
 function getArg(name: string): string | undefined {
@@ -23,13 +24,17 @@ async function main() {
   const ingestor = new JsonFileIngestor(filePath, source);
   const normalizers = [new JsonJobNormalizer()];
   const repository = new JobRepository();
+
+  // NEW services
   const canonicalJobResolver = new CanonicalJobResolverService(prisma);
+  const canonicalJobScoringService = new CanonicalJobScoringService(prisma);
 
   const service = new JobIngestionService(
     ingestor,
     normalizers,
     repository,
-    canonicalJobResolver
+    canonicalJobResolver,
+    canonicalJobScoringService
   );
 
   const result = await service.run();

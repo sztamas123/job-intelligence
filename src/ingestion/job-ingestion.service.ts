@@ -3,13 +3,15 @@ import { JobNormalizer } from "./normalizer";
 import { JobPosting } from "../domain/job/job.types";
 import { JobRepository } from "../repositories/job.repository";
 import { CanonicalJobResolverService } from "./deduplication/canonical-job-resolver.service";
+import { CanonicalJobScoringService } from "./scoring/canonical-job-scoring.service";
 
 export class JobIngestionService {
   constructor(
     private readonly ingestor: JobIngestor,
     private readonly normalizers: JobNormalizer[],
     private readonly jobRepository: JobRepository,
-    private readonly canonicalJobResolver: CanonicalJobResolverService
+    private readonly canonicalJobResolver: CanonicalJobResolverService,
+    private readonly canonicalJobScoringService: CanonicalJobScoringService
   ) {}
 
   async run(): Promise<{
@@ -59,23 +61,19 @@ export class JobIngestionService {
             normalized.postedAt?.toISOString();
 
         if (hasChanges) {
-          const updatedPosting = await this.jobRepository.update(
-            existingJob.id,
-            {
-              title: normalized.title,
-              company: normalized.company,
-              location: normalized.location,
-              remoteType: normalized.remoteType,
-              employmentType: normalized.employmentType,
-              seniority: normalized.seniority,
-              descriptionRaw: normalized.descriptionRaw,
-              postedAt: normalized.postedAt,
-            }
-          );
+          await this.jobRepository.update(existingJob.id, {
+            title: normalized.title,
+            company: normalized.company,
+            location: normalized.location,
+            remoteType: normalized.remoteType,
+            employmentType: normalized.employmentType,
+            seniority: normalized.seniority,
+            descriptionRaw: normalized.descriptionRaw,
+            postedAt: normalized.postedAt,
+          });
 
-          await this.canonicalJobResolver.resolveForPosting(
-            updatedPosting.id
-          );
+          await this.canonicalJobResolver.resolveForPosting(existingJob.id);
+          await this.canonicalJobScoringService.scoreForPosting(existingJob.id);
 
           updated++;
         } else {
@@ -87,12 +85,11 @@ export class JobIngestionService {
           scrapedAt: new Date(),
         };
 
-        const createdPosting =
+        const created =
           await this.jobRepository.create(jobToCreate);
 
-        await this.canonicalJobResolver.resolveForPosting(
-          createdPosting.id
-        );
+        await this.canonicalJobResolver.resolveForPosting(created.id);
+        await this.canonicalJobScoringService.scoreForPosting(created.id);
 
         ingested++;
       }
